@@ -405,6 +405,7 @@
   }
 
   .world-help {
+    bottom: 128px;
     font-size: 0.7rem;
   }
 }
