@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import App from './App.tsx'
+import { getInitialTheme, THEME_STORAGE_KEY, type Theme } from './theme.ts'
 
 /* World3D pulls in the heavy Three.js scene; load it only when visited. */
 const World3D = lazy(() => import('./World3D.tsx'))
@@ -11,7 +12,7 @@ function WorldLoader() {
     <div
       style={{
         alignItems: 'center',
-        color: '#7a9ba0',
+        color: 'var(--text-secondary)',
         display: 'flex',
         fontFamily: "'Space Grotesk', 'Inter', sans-serif",
         fontSize: '0.85rem',
@@ -32,6 +33,17 @@ export default function Root() {
   const [page, setPage] = useState(
     window.location.hash === '#/3d' ? '3d' : 'portfolio',
   )
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+    } catch {
+      // The theme still works if storage is unavailable.
+    }
+  }, [theme])
 
   useEffect(() => {
     const onHash = () => {
@@ -41,12 +53,16 @@ export default function Root() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
+  const toggleTheme = () => {
+    setTheme((current) => (current === 'light' ? 'dark' : 'light'))
+  }
+
   if (page === '3d') {
     return (
       <Suspense fallback={<WorldLoader />}>
-        <World3D />
+        <World3D theme={theme} onToggleTheme={toggleTheme} />
       </Suspense>
     )
   }
-  return <App />
+  return <App theme={theme} onToggleTheme={toggleTheme} />
 }

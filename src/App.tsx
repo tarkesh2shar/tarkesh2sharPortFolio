@@ -29,6 +29,7 @@ import {
   reflections,
 } from './data'
 import './App.css'
+import type { Theme } from './theme'
 
 /* The constellation background pulls in Three.js; loading it lazily keeps
    the heavy 3D dependency out of the critical path so the hero text paints
@@ -46,18 +47,8 @@ const capabilityIcons: Record<string, React.ComponentType<{ size?: number }>> = 
   BrainCircuit,
 }
 
-type Theme = 'dark' | 'light'
-
-function App() {
+function App({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const [activeSection, setActiveSection] = useState('home')
-  const [theme, setTheme] = useState<Theme>(() =>
-    localStorage.getItem('theme') === 'light' ? 'light' : 'dark',
-  )
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    localStorage.setItem('theme', theme)
-  }, [theme])
 
   useEffect(() => {
     const ids = ['home', 'work', 'experience', 'skills', 'contact']
@@ -103,7 +94,7 @@ function App() {
           <button
             type="button"
             className="theme-toggle"
-            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            onClick={onToggleTheme}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}

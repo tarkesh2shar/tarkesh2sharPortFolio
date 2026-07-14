@@ -34,8 +34,12 @@
   <body>
     <script>
       // Apply saved theme before first paint to avoid a flash
-      document.documentElement.dataset.theme =
-        localStorage.getItem('theme') === 'light' ? 'light' : 'dark'
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'
+      } catch {
+        document.documentElement.dataset.theme = 'light'
+      }
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
