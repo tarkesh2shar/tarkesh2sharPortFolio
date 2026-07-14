@@ -237,7 +237,7 @@ export const reflections: Reflection[] = [
   },
 ]
 
-export const capabilitiesData = [
+export const capabilitiesData: Capability[] = [
   {
     icon: 'Code2',
     title: 'React Frontends',

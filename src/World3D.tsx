@@ -16,13 +16,21 @@ import './World3D.css'
    PLATFORM DEFINITIONS
    ================================================================ */
 
-const PLATFORMS = [
-  { id: 'hub', label: 'Home', position: [0, 0, 0] as const, color: 0x00f0ff, camOffset: [0, 8, 20] as const },
-  { id: 'experience', label: 'Experience', position: [42, 0, -12] as const, color: 0x00d0e8, camOffset: [0, 12, 24] as const },
+type Platform = {
+  id: string
+  label: string
+  position: readonly [number, number, number]
+  color: number
+  camOffset: readonly [number, number, number]
+}
+
+const PLATFORMS: Platform[] = [
+  { id: 'hub', label: 'Home', position: [0, 0, 0] as const, color: 0x3ddbe8, camOffset: [0, 8, 20] as const },
+  { id: 'experience', label: 'Experience', position: [42, 0, -12] as const, color: 0x35c9d6, camOffset: [0, 12, 24] as const },
   { id: 'projects', label: 'Projects', position: [-32, 6, -38] as const, color: 0xf7b267, camOffset: [0, 12, 26] as const },
-  { id: 'skills', label: 'Skills', position: [-42, -2, 18] as const, color: 0x00e0f0, camOffset: [0, 10, 20] as const },
+  { id: 'skills', label: 'Skills', position: [-42, -2, 18] as const, color: 0x39d2df, camOffset: [0, 10, 20] as const },
   { id: 'certs', label: 'Certifications', position: [28, 4, -36] as const, color: 0xf0a050, camOffset: [0, 10, 24] as const },
-  { id: 'contact', label: 'Contact', position: [5, -4, 46] as const, color: 0x00f0ff, camOffset: [0, 8, 20] as const },
+  { id: 'contact', label: 'Contact', position: [5, -4, 46] as const, color: 0x3ddbe8, camOffset: [0, 8, 20] as const },
 ]
 
 const OVERVIEW = { position: new THREE.Vector3(0, 35, 75), lookAt: new THREE.Vector3(0, 0, 0) }
@@ -56,17 +64,17 @@ function createTextSprite(text: string, scale = 10): THREE.Sprite {
 
 function buildHub(group: THREE.Group) {
   // Hex base
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x00f0ff, emissiveIntensity: 0.08, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x3ddbe8, emissiveIntensity: 0.08, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 0.5, 6), baseMat))
 
   // Core icosahedron (wireframe)
-  const coreMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00f0ff, emissiveIntensity: 0.3, wireframe: true, transparent: true, opacity: 0.75 })
+  const coreMat = new THREE.MeshStandardMaterial({ color: 0x3ddbe8, emissive: 0x3ddbe8, emissiveIntensity: 0.3, wireframe: true, transparent: true, opacity: 0.75 })
   const core = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), coreMat)
   core.position.y = 4
   group.add(core)
 
   // Inner solid
-  const innerMat = new THREE.MeshStandardMaterial({ color: 0x00c8d8, emissive: 0x00f0ff, emissiveIntensity: 0.2, metalness: 0.5, roughness: 0.4 })
+  const innerMat = new THREE.MeshStandardMaterial({ color: 0x2bb8c6, emissive: 0x3ddbe8, emissiveIntensity: 0.2, metalness: 0.5, roughness: 0.4 })
   const inner = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 1), innerMat)
   inner.position.y = 4
   group.add(inner)
@@ -92,12 +100,12 @@ function buildHub(group: THREE.Group) {
 }
 
 function buildExperience(group: THREE.Group) {
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x00d0e8, emissiveIntensity: 0.06, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x35c9d6, emissiveIntensity: 0.06, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 0.4, 6), baseMat))
 
   const companies = [
-    { h: 9, c: 0x00f0ff, x: -6 },
-    { h: 4.5, c: 0x00c8d8, x: -3 },
+    { h: 9, c: 0x3ddbe8, x: -6 },
+    { h: 4.5, c: 0x2bb8c6, x: -3 },
     { h: 6, c: 0x00a0b0, x: 0 },
     { h: 2.5, c: 0x008090, x: 3 },
     { h: 7, c: 0x006878, x: 6 },
@@ -154,12 +162,12 @@ function buildProjects(group: THREE.Group) {
 }
 
 function buildSkills(group: THREE.Group) {
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x00e0f0, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x39d2df, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 0.3, 6), baseMat))
 
   const nodes = [
-    { x: 0, y: 2.5, z: 0, s: 1.2, c: 0x00f0ff },
-    { x: 3.5, y: 2, z: 1, s: 0.85, c: 0x00c8d8 },
+    { x: 0, y: 2.5, z: 0, s: 1.2, c: 0x3ddbe8 },
+    { x: 3.5, y: 2, z: 1, s: 0.85, c: 0x2bb8c6 },
     { x: -2.5, y: 3.5, z: 1.5, s: 0.75, c: 0x00a0b0 },
     { x: 2.5, y: 4, z: -2.5, s: 0.65, c: 0xf7b267 },
     { x: -3.5, y: 1.5, z: -1.5, s: 0.75, c: 0x00d0e0 },
@@ -178,7 +186,7 @@ function buildSkills(group: THREE.Group) {
   const conns = [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [3, 4]]
   conns.forEach(([a, b]) => {
     const pts = [new THREE.Vector3(nodes[a].x, nodes[a].y, nodes[a].z), new THREE.Vector3(nodes[b].x, nodes[b].y, nodes[b].z)]
-    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.2 })))
+    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x3ddbe8, transparent: true, opacity: 0.2 })))
   })
 
   const label = createTextSprite('Skills')
@@ -214,11 +222,11 @@ function buildCerts(group: THREE.Group) {
 }
 
 function buildContact(group: THREE.Group) {
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x00f0ff, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x3ddbe8, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 0.3, 8), baseMat))
 
   // Tower
-  const towerMat = new THREE.MeshStandardMaterial({ color: 0x00d0e8, emissive: 0x00f0ff, emissiveIntensity: 0.15, metalness: 0.6, roughness: 0.3 })
+  const towerMat = new THREE.MeshStandardMaterial({ color: 0x35c9d6, emissive: 0x3ddbe8, emissiveIntensity: 0.15, metalness: 0.6, roughness: 0.3 })
   const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.4, 7, 8), towerMat)
   tower.position.set(0, 3.7, 0)
   group.add(tower)
@@ -232,7 +240,7 @@ function buildContact(group: THREE.Group) {
   // Signal rings
   const signalRings: THREE.Mesh[] = []
   for (let i = 0; i < 3; i++) {
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.25 - i * 0.06, side: THREE.DoubleSide })
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x3ddbe8, transparent: true, opacity: 0.25 - i * 0.06, side: THREE.DoubleSide })
     const ring = new THREE.Mesh(new THREE.TorusGeometry(2.5 + i * 1.8, 0.04, 8, 48), ringMat)
     ring.position.y = 7
     ring.rotation.x = Math.PI / 2
@@ -453,8 +461,10 @@ export default function World3D() {
   }, [])
 
   // Keep refs current
-  flyToRef.current = flyTo
-  flyToOverviewRef.current = flyToOverview
+  useEffect(() => {
+    flyToRef.current = flyTo
+    flyToOverviewRef.current = flyToOverview
+  }, [flyTo, flyToOverview])
 
   /* ---- Three.js setup ---- */
   useEffect(() => {
@@ -630,7 +640,8 @@ export default function World3D() {
       skillAnim.spheres.forEach((sphere, i) => {
         const s = 1 + Math.sin(t * 0.7 + i * 1.1) * 0.1
         const base = sphere.userData.baseScale as number
-        sphere.scale.setScalar(s * (base / sphere.geometry.parameters.radius))
+        const radius = (sphere.geometry as THREE.SphereGeometry).parameters.radius
+        sphere.scale.setScalar(s * (base / radius))
       })
 
       // Contact signal rings
@@ -662,6 +673,17 @@ export default function World3D() {
       window.removeEventListener('resize', onResize)
       controls.dispose()
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.Points || obj instanceof THREE.Line) {
+          obj.geometry.dispose()
+          const materials = Array.isArray(obj.material) ? obj.material : [obj.material]
+          materials.forEach((m) => m.dispose())
+        }
+        if (obj instanceof THREE.Sprite) {
+          obj.material.map?.dispose()
+          obj.material.dispose()
+        }
+      })
       renderer.dispose()
     }
   }, [])

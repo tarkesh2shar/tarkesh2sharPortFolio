@@ -5,17 +5,17 @@
   --bg-card: rgba(12, 22, 32, 0.6);
   --bg-card-hover: rgba(15, 28, 40, 0.8);
 
-  --accent-cyan: #00f0ff;
-  --accent-cyan-dim: rgba(0, 240, 255, 0.12);
+  --accent-cyan: #3ddbe8;
+  --accent-cyan-dim: rgba(61, 219, 232, 0.12);
   --accent-gold: #f7b267;
   --accent-gold-dim: rgba(247, 178, 103, 0.12);
 
   --text-primary: #e8f4f8;
   --text-secondary: #7a9ba0;
-  --text-muted: #4a6670;
+  --text-muted: #5d7f8a;
 
-  --border-subtle: rgba(0, 240, 255, 0.07);
-  --border-hover: rgba(0, 240, 255, 0.25);
+  --border-subtle: rgba(61, 219, 232, 0.07);
+  --border-hover: rgba(61, 219, 232, 0.25);
   --border-gold: rgba(247, 178, 103, 0.14);
 
   /* Glass */
@@ -56,6 +56,12 @@
 html {
   background: var(--bg-deep);
   scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
