@@ -7,10 +7,12 @@ import {
   Download,
   Mail,
   MapPin,
+  Moon,
   PlayCircle,
   Rocket,
   Server,
   Sparkles,
+  Sun,
   TerminalSquare,
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState } from 'react'
@@ -44,8 +46,18 @@ const capabilityIcons: Record<string, React.ComponentType<{ size?: number }>> = 
   BrainCircuit,
 }
 
+type Theme = 'dark' | 'light'
+
 function App() {
   const [activeSection, setActiveSection] = useState('home')
+  const [theme, setTheme] = useState<Theme>(() =>
+    localStorage.getItem('theme') === 'light' ? 'light' : 'dark',
+  )
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const ids = ['home', 'work', 'experience', 'skills', 'contact']
@@ -70,7 +82,7 @@ function App() {
   return (
     <>
       <Suspense fallback={null}>
-        <ParticleField />
+        <ParticleField key={theme} theme={theme} />
       </Suspense>
       <ScrollProgress />
 
@@ -88,6 +100,14 @@ function App() {
               {id.charAt(0).toUpperCase() + id.slice(1)}
             </a>
           ))}
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         </div>
       </nav>
 

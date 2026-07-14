@@ -3,15 +3,43 @@ import * as THREE from 'three'
 
 /* Full-viewport Three.js constellation background.
    Honors prefers-reduced-motion (renders a single static frame)
-   and scales particle counts down on small screens. */
+   and scales particle counts down on small screens.
+   Additive glow only reads on dark backgrounds, so the light theme
+   uses darkened particles with normal blending instead. */
 
-export default function ParticleField() {
+const PALETTES = {
+  dark: {
+    star: 0xc8e0f0,
+    starOpacity: 0.35,
+    cyan: 0x3ddbe8,
+    gold: 0xf7b267,
+    neutral: 0xd0eaf0,
+    nodeOpacity: 0.85,
+    lineOpacity: 0.18,
+    lineTint: [0.239, 0.859, 0.91] as const,
+    blending: THREE.AdditiveBlending,
+  },
+  light: {
+    star: 0x5a7c88,
+    starOpacity: 0.4,
+    cyan: 0x0b7f8e,
+    gold: 0x9d640e,
+    neutral: 0x7fa3ad,
+    nodeOpacity: 0.9,
+    lineOpacity: 0.35,
+    lineTint: [0.03, 0.42, 0.47] as const,
+    blending: THREE.NormalBlending,
+  },
+}
+
+export default function ParticleField({ theme = 'dark' }: { theme?: 'dark' | 'light' }) {
   const mountRef = useRef<HTMLDivElement | null>(null)
   const mouseRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     const mount = mountRef.current
     if (!mount) return
+    const palette = PALETTES[theme]
 
     const prefersReducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
@@ -50,12 +78,12 @@ export default function ParticleField() {
     const starGeo = new THREE.BufferGeometry()
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
     const starMat = new THREE.PointsMaterial({
-      color: 0xc8e0f0,
+      color: palette.star,
       size: 0.12,
       transparent: true,
-      opacity: 0.35,
+      opacity: palette.starOpacity,
       sizeAttenuation: true,
-      blending: THREE.AdditiveBlending,
+      blending: palette.blending,
       depthWrite: false,
     })
     const stars = new THREE.Points(starGeo, starMat)
@@ -67,9 +95,9 @@ export default function ParticleField() {
     const nodeOriginals = new Float32Array(nodeCount * 3)
     const nodeColors = new Float32Array(nodeCount * 3)
 
-    const cyan = new THREE.Color(0x3ddbe8)
-    const gold = new THREE.Color(0xf7b267)
-    const white = new THREE.Color(0xd0eaf0)
+    const cyan = new THREE.Color(palette.cyan)
+    const gold = new THREE.Color(palette.gold)
+    const white = new THREE.Color(palette.neutral)
 
     for (let i = 0; i < nodeCount; i++) {
       const r = 8 + Math.random() * 28
@@ -100,9 +128,9 @@ export default function ParticleField() {
     const nodeMat = new THREE.PointsMaterial({
       size: 0.35,
       transparent: true,
-      opacity: 0.85,
+      opacity: palette.nodeOpacity,
       sizeAttenuation: true,
-      blending: THREE.AdditiveBlending,
+      blending: palette.blending,
       depthWrite: false,
       vertexColors: true,
     })
@@ -122,9 +150,9 @@ export default function ParticleField() {
 
     const lineMat = new THREE.LineBasicMaterial({
       transparent: true,
-      opacity: 0.18,
+      opacity: palette.lineOpacity,
       vertexColors: true,
-      blending: THREE.AdditiveBlending,
+      blending: palette.blending,
       depthWrite: false,
     })
     const lines = new THREE.LineSegments(lineGeo, lineMat)
@@ -151,10 +179,7 @@ export default function ParticleField() {
     window.addEventListener('resize', onResize)
 
     /* ---- Render ---- */
-    // New accent cyan #3ddbe8 in normalized RGB, for line tinting
-    const lineR = 0.239
-    const lineG = 0.859
-    const lineB = 0.91
+    const [lineR, lineG, lineB] = palette.lineTint
 
     const renderFrame = (t: number) => {
       // Gentle ambient rotation
@@ -257,7 +282,7 @@ export default function ParticleField() {
       lineMat.dispose()
       renderer.dispose()
     }
-  }, [])
+  }, [theme])
 
   return <div ref={mountRef} className="particle-field" aria-hidden="true" />
 }

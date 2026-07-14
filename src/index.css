@@ -41,12 +41,39 @@
   --radius-pill: 999px;
 
   color: var(--text-primary);
+  color-scheme: dark;
   font-family: var(--font-body);
   font-synthesis: none;
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light theme — accents darkened to keep AA contrast on near-white */
+:root[data-theme='light'] {
+  --bg-deep: #f5f9fb;
+  --bg-surface: rgba(255, 255, 255, 0.75);
+  --bg-card: rgba(255, 255, 255, 0.72);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+
+  --accent-cyan: #0b7f8e;
+  --accent-cyan-dim: rgba(11, 127, 142, 0.1);
+  --accent-gold: #9d640e;
+  --accent-gold-dim: rgba(157, 100, 14, 0.12);
+
+  --text-primary: #10222b;
+  --text-secondary: #45606a;
+  --text-muted: #5c7680;
+
+  --border-subtle: rgba(11, 127, 142, 0.12);
+  --border-hover: rgba(11, 127, 142, 0.35);
+  --border-gold: rgba(157, 100, 14, 0.25);
+
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(16, 34, 43, 0.08);
+
+  color-scheme: light;
 }
 
 * {

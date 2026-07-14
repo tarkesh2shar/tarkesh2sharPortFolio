@@ -216,6 +216,30 @@ main::before {
   gap: 4px;
 }
 
+.theme-toggle {
+  align-items: center;
+  background: none;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  margin-left: 6px;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+  width: 34px;
+}
+
+.theme-toggle:hover {
+  background: var(--accent-cyan-dim);
+  border-color: var(--border-hover);
+  color: var(--accent-cyan);
+}
+
 .nav-links a {
   border-radius: var(--radius-pill);
   color: var(--text-secondary);
@@ -967,15 +991,14 @@ h3 {
    ================================================================ */
 
 .contact-section {
-  align-items: center;
   background:
     radial-gradient(circle at 20% 20%, rgba(61, 219, 232, 0.1), transparent 35%),
     radial-gradient(circle at 85% 20%, rgba(247, 178, 103, 0.08), transparent 32%),
     var(--bg-deep);
   border-top: 1px solid var(--glass-border);
   display: grid;
-  gap: 36px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  grid-template-columns: 1fr;
 }
 
 .contact-section h2 {
@@ -987,8 +1010,8 @@ h3 {
 }
 
 .contact-actions {
-  justify-content: flex-end;
-  margin-top: 0;
+  justify-content: flex-start;
+  margin-top: 24px;
 }
 
 /* ================================================================
@@ -1133,4 +1156,113 @@ h3 {
   .mark {
     transition: none;
   }
+}
+
+/* ================================================================
+   LIGHT THEME OVERRIDES — for values not driven by variables
+   ================================================================ */
+
+:root[data-theme='light'] .topbar {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 32px rgba(16, 34, 43, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+:root[data-theme='light'] .nav-links a:hover {
+  background: rgba(11, 127, 142, 0.07);
+}
+
+:root[data-theme='light'] .nav-links a.active {
+  background: rgba(11, 127, 142, 0.1);
+  box-shadow: none;
+}
+
+:root[data-theme='light'] main::before {
+  background:
+    linear-gradient(rgba(16, 34, 43, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 34, 43, 0.035) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+:root[data-theme='light'] .hero-badge {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(11, 127, 142, 0.25);
+  box-shadow: 0 16px 48px rgba(16, 34, 43, 0.12);
+}
+
+:root[data-theme='light'] .button.ghost {
+  border-color: rgba(16, 34, 43, 0.16);
+}
+
+:root[data-theme='light'] .button.ghost:hover {
+  background: rgba(11, 127, 142, 0.06);
+  box-shadow: none;
+}
+
+:root[data-theme='light'] .button.primary {
+  background: linear-gradient(135deg, #0b7f8e, #0a6c79);
+  box-shadow: 0 4px 20px rgba(11, 127, 142, 0.25);
+  color: #f5f9fb;
+}
+
+:root[data-theme='light'] .button.primary:hover {
+  box-shadow: 0 8px 32px rgba(11, 127, 142, 0.35);
+}
+
+:root[data-theme='light'] .button.cyan {
+  border-color: rgba(11, 127, 142, 0.35);
+}
+
+:root[data-theme='light'] .tag-row span {
+  background: rgba(11, 127, 142, 0.08);
+  border-color: rgba(11, 127, 142, 0.22);
+  color: #0b7f8e;
+}
+
+:root[data-theme='light'] .tag-row span:hover {
+  background: rgba(11, 127, 142, 0.14);
+  border-color: rgba(11, 127, 142, 0.35);
+}
+
+:root[data-theme='light'] .scroll-progress {
+  background: rgba(11, 127, 142, 0.12);
+}
+
+:root[data-theme='light'] .experience-card {
+  animation: none;
+}
+
+:root[data-theme='light'] .experience-card:hover,
+:root[data-theme='light'] .project-row:hover,
+:root[data-theme='light'] .edge-card:hover,
+:root[data-theme='light'] .capability-card:hover,
+:root[data-theme='light'] .cert-card:hover,
+:root[data-theme='light'] .reflection-card:hover {
+  box-shadow: 0 12px 40px rgba(16, 34, 43, 0.1);
+}
+
+:root[data-theme='light'] .capability-card svg {
+  filter: none;
+}
+
+:root[data-theme='light'] .reflection-card img {
+  filter: saturate(0.75) contrast(1.02);
+}
+
+:root[data-theme='light'] .timeline-entry::before {
+  box-shadow: 0 0 8px rgba(11, 127, 142, 0.4);
+}
+
+:root[data-theme='light'] .reflection-section,
+:root[data-theme='light'] .experience-section,
+:root[data-theme='light'] .project-section,
+:root[data-theme='light'] .timeline-section,
+:root[data-theme='light'] .cert-section {
+  background: transparent;
+}
+
+:root[data-theme='light'] .contact-section {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(11, 127, 142, 0.07), transparent 35%),
+    radial-gradient(circle at 85% 20%, rgba(157, 100, 14, 0.06), transparent 32%),
+    var(--bg-deep);
 }
