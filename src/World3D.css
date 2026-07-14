@@ -354,6 +354,25 @@
 }
 
 /* ================================================================
+   WEBGL FALLBACK
+   ================================================================ */
+
+.world-fallback {
+  align-items: center;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.world-fallback-link {
+  position: static;
+}
+
+/* ================================================================
    RESPONSIVE
    ================================================================ */
 
@@ -364,8 +383,13 @@
   }
 
   .world-nav {
+    border-radius: 20px;
+    flex-wrap: wrap;
     gap: 2px;
+    justify-content: center;
+    max-width: calc(100vw - 16px);
     padding: 4px;
+    width: max-content;
   }
 
   .world-nav button {

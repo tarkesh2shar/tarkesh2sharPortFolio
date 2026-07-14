@@ -60,7 +60,8 @@ export const links = {
   instagram: 'https://www.instagram.com/tarkesh2shar/',
   youtube: 'https://www.youtube.com/@tarkesh2shar',
   email: 'mailto:tarkesh2shar@gmail.com',
-  resume: '/Tushar_Pant_Resume_2026.pdf',
+  // BASE_URL-aware so the link works when hosted under a subpath
+  resume: `${import.meta.env.BASE_URL}Tushar_Pant_Resume_2026.pdf`,
 }
 
 export const projects: Project[] = [

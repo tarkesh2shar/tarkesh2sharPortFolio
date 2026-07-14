@@ -13,8 +13,7 @@ import {
   Sparkles,
   TerminalSquare,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import ParticleField from './components/ParticleField'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import ScrollProgress from './components/ScrollProgress'
 import ScrollReveal from './components/ScrollReveal'
 import TiltCard from './components/TiltCard'
@@ -28,6 +27,11 @@ import {
   reflections,
 } from './data'
 import './App.css'
+
+/* The constellation background pulls in Three.js; loading it lazily keeps
+   the heavy 3D dependency out of the critical path so the hero text paints
+   immediately. The background simply fades in when ready. */
+const ParticleField = lazy(() => import('./components/ParticleField'))
 
 /* Capability data stores icon names; resolve them to lucide components here
    so data.ts stays render-agnostic. */
@@ -65,7 +69,9 @@ function App() {
 
   return (
     <>
-      <ParticleField />
+      <Suspense fallback={null}>
+        <ParticleField />
+      </Suspense>
       <ScrollProgress />
 
       <nav className="topbar" aria-label="Primary navigation">
@@ -270,7 +276,7 @@ function App() {
           <ScrollReveal>
             <div className="section-heading">
               <p className="eyebrow">Certifications</p>
-              <h2>Cloud and AI credentials from LinkedIn.</h2>
+              <h2>Cloud and AI credentials from AWS and Anthropic.</h2>
             </div>
           </ScrollReveal>
           <div className="cert-grid">

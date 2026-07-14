@@ -496,6 +496,15 @@ function PanelContent({ id, onClose }: { id: string; onClose: () => void }) {
 export default function World3D() {
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const [focused, setFocused] = useState<string | null>(null)
+  const [webglFailed, setWebglFailed] = useState(() => {
+    try {
+      const probe = document.createElement('canvas')
+      return !(probe.getContext('webgl2') || probe.getContext('webgl'))
+    } catch {
+      return true
+    }
+  })
+  const isTouch = window.matchMedia('(pointer: coarse)').matches
 
   // Refs for imperative Three.js communication
   const cameraAnim = useRef({
@@ -555,8 +564,15 @@ export default function World3D() {
     const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500)
     camera.position.copy(OVERVIEW.position)
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' })
+    // Renderer — WebGL can be unavailable (old GPU, disabled); fail gracefully
+    let renderer: THREE.WebGLRenderer
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' })
+    } catch {
+      // Rare: context creation failed despite the support probe
+      queueMicrotask(() => setWebglFailed(true))
+      return
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setClearColor(0x050a0f)
@@ -747,8 +763,19 @@ export default function World3D() {
         if (obj?.userData.platformId) flyToRef.current(obj.userData.platformId)
       }
     }
+    // Pointer cursor over clickable platforms
+    const onPointerMove = (e: PointerEvent) => {
+      const mouse = new THREE.Vector2(
+        (e.clientX / window.innerWidth) * 2 - 1,
+        -(e.clientY / window.innerHeight) * 2 + 1,
+      )
+      raycaster.setFromCamera(mouse, camera)
+      renderer.domElement.style.cursor =
+        raycaster.intersectObjects(platformGroups, true).length > 0 ? 'pointer' : 'grab'
+    }
     renderer.domElement.addEventListener('pointerdown', onPointerDown)
     renderer.domElement.addEventListener('pointerup', onPointerUp)
+    renderer.domElement.addEventListener('pointermove', onPointerMove)
 
     // Resize
     const onResize = () => {
@@ -836,6 +863,7 @@ export default function World3D() {
       cancelAnimationFrame(frame)
       renderer.domElement.removeEventListener('pointerdown', onPointerDown)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)
+      renderer.domElement.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('resize', onResize)
       controls.dispose()
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
@@ -866,6 +894,15 @@ export default function World3D() {
   }, [flyTo, flyToOverview])
 
   /* ---- Render ---- */
+  if (webglFailed) {
+    return (
+      <div className="world-3d world-fallback">
+        <p>This 3D view needs WebGL, which your browser or device has disabled.</p>
+        <a href="#/" className="world-back-link world-fallback-link">← Back to the portfolio</a>
+      </div>
+    )
+  }
+
   return (
     <div className="world-3d">
       <div ref={canvasRef} className="world-canvas" />
@@ -886,7 +923,9 @@ export default function World3D() {
 
       {!focused && (
         <div className="world-help">
-          Drag to orbit · Scroll to zoom · Click a platform to explore · Keys 1–6
+          {isTouch
+            ? 'Drag to orbit · Pinch to zoom · Tap a platform to explore'
+            : 'Drag to orbit · Scroll to zoom · Click a platform to explore · Keys 1–6'}
         </div>
       )}
 
