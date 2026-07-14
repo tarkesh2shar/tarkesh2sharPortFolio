@@ -25,12 +25,12 @@ type Platform = {
 }
 
 const PLATFORMS: Platform[] = [
-  { id: 'hub', label: 'Home', position: [0, 0, 0] as const, color: 0x3ddbe8, camOffset: [0, 8, 20] as const },
-  { id: 'experience', label: 'Experience', position: [42, 0, -12] as const, color: 0x35c9d6, camOffset: [0, 12, 24] as const },
-  { id: 'projects', label: 'Projects', position: [-32, 6, -38] as const, color: 0xf7b267, camOffset: [0, 12, 26] as const },
-  { id: 'skills', label: 'Skills', position: [-42, -2, 18] as const, color: 0x39d2df, camOffset: [0, 10, 20] as const },
-  { id: 'certs', label: 'Certifications', position: [28, 4, -36] as const, color: 0xf0a050, camOffset: [0, 10, 24] as const },
-  { id: 'contact', label: 'Contact', position: [5, -4, 46] as const, color: 0x3ddbe8, camOffset: [0, 8, 20] as const },
+  { id: 'hub', label: 'Home', position: [0, 0, 0] as const, color: 0x3ddbe8, camOffset: [0, 7, 22] as const },
+  { id: 'experience', label: 'Experience', position: [42, 0, -12] as const, color: 0x35c9d6, camOffset: [4, 11, 33] as const },
+  { id: 'projects', label: 'Projects', position: [-32, 6, -38] as const, color: 0xf7b267, camOffset: [3, 9, 28] as const },
+  { id: 'skills', label: 'Skills', position: [-42, -2, 18] as const, color: 0x39d2df, camOffset: [3, 9, 25] as const },
+  { id: 'certs', label: 'Certifications', position: [28, 4, -36] as const, color: 0xf0a050, camOffset: [3, 9, 29] as const },
+  { id: 'contact', label: 'Contact', position: [5, -4, 46] as const, color: 0x3ddbe8, camOffset: [2, 8, 25] as const },
 ]
 
 const OVERVIEW = { position: new THREE.Vector3(0, 35, 75), lookAt: new THREE.Vector3(0, 0, 0) }
@@ -39,23 +39,74 @@ const OVERVIEW = { position: new THREE.Vector3(0, 35, 75), lookAt: new THREE.Vec
    TEXT SPRITE HELPER
    ================================================================ */
 
-function createTextSprite(text: string, scale = 10): THREE.Sprite {
+function createTextSprite(text: string, scale = 10, glow = '#3ddbe8'): THREE.Sprite {
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')!
-  canvas.width = 512
-  canvas.height = 128
-  ctx.clearRect(0, 0, 512, 128)
-  ctx.font = '600 44px "Space Grotesk", "Inter", sans-serif'
+  canvas.width = 1024
+  canvas.height = 256
+  ctx.clearRect(0, 0, 1024, 256)
+  ctx.font = '600 76px "Space Grotesk", "Inter", sans-serif'
   ctx.fillStyle = '#e8f4f8'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, 256, 64)
+  ctx.shadowColor = glow
+  ctx.shadowBlur = 28
+  ctx.fillText(text.toUpperCase(), 512, 128)
+  ctx.shadowBlur = 0
+  ctx.fillText(text.toUpperCase(), 512, 128)
   const tex = new THREE.CanvasTexture(canvas)
   tex.minFilter = THREE.LinearFilter
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.85, depthTest: false })
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.9, depthTest: false })
   const sprite = new THREE.Sprite(mat)
   sprite.scale.set(scale, scale * 0.25, 1)
+  sprite.userData.isLabel = true
   return sprite
+}
+
+/* Soft radial glow texture, used for platform under-glows, nebula
+   backdrops, and the pulses that travel the light paths. */
+function createGlowTexture(color: string): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 256
+  const ctx = canvas.getContext('2d')!
+  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128)
+  grad.addColorStop(0, color)
+  grad.addColorStop(0.4, color.replace(')', ', 0.35)').replace('rgb', 'rgba'))
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, 256, 256)
+  return new THREE.CanvasTexture(canvas)
+}
+
+/* Orbit ring + under-glow shared by every platform so the islands read
+   as lit objects instead of unlit primitives floating in the void. */
+function addPlatformGlow(group: THREE.Group, radius: number, color: number, y = 0.35) {
+  const hex = `#${color.toString(16).padStart(6, '0')}`
+
+  const ringPts = new THREE.EllipseCurve(0, 0, radius + 0.5, radius + 0.5, 0, Math.PI * 2).getPoints(72)
+  const ring = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(ringPts),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false }),
+  )
+  ring.rotation.x = -Math.PI / 2
+  ring.position.y = y
+  group.add(ring)
+
+  const glowMat = new THREE.SpriteMaterial({
+    map: createGlowTexture(`rgb(${(color >> 16) & 255}, ${(color >> 8) & 255}, ${color & 255})`),
+    color: hex,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const glow = new THREE.Sprite(glowMat)
+  glow.scale.setScalar(radius * 4)
+  glow.position.y = -1.5
+  group.add(glow)
+
+  return ring
 }
 
 /* ================================================================
@@ -64,8 +115,9 @@ function createTextSprite(text: string, scale = 10): THREE.Sprite {
 
 function buildHub(group: THREE.Group) {
   // Hex base
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x3ddbe8, emissiveIntensity: 0.08, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x3ddbe8, emissiveIntensity: 0.14, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 0.5, 6), baseMat))
+  addPlatformGlow(group, 7, 0x3ddbe8)
 
   // Core icosahedron (wireframe)
   const coreMat = new THREE.MeshStandardMaterial({ color: 0x3ddbe8, emissive: 0x3ddbe8, emissiveIntensity: 0.3, wireframe: true, transparent: true, opacity: 0.75 })
@@ -100,19 +152,20 @@ function buildHub(group: THREE.Group) {
 }
 
 function buildExperience(group: THREE.Group) {
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x35c9d6, emissiveIntensity: 0.06, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x35c9d6, emissiveIntensity: 0.12, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 0.4, 6), baseMat))
+  addPlatformGlow(group, 9, 0x35c9d6)
 
   const companies = [
     { h: 9, c: 0x3ddbe8, x: -6 },
     { h: 4.5, c: 0x2bb8c6, x: -3 },
-    { h: 6, c: 0x00a0b0, x: 0 },
-    { h: 2.5, c: 0x008090, x: 3 },
-    { h: 7, c: 0x006878, x: 6 },
+    { h: 6, c: 0x35c9d6, x: 0 },
+    { h: 2.5, c: 0x2bb8c6, x: 3 },
+    { h: 7, c: 0x3ddbe8, x: 6 },
   ]
   const pillars: THREE.Mesh[] = []
   companies.forEach(({ h, c, x }) => {
-    const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.15, metalness: 0.6, roughness: 0.3, transparent: true, opacity: 0.7 })
+    const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.32, metalness: 0.6, roughness: 0.3, transparent: true, opacity: 0.6 })
     const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, h, 8), mat)
     pillar.position.set(x, h / 2 + 0.2, 0)
     group.add(pillar)
@@ -138,16 +191,17 @@ function buildProjects(group: THREE.Group) {
     { x: -4, y: 0.5, z: 2.5, s: 1 },
     { x: 1.5, y: 4, z: -2, s: 1.2 },
   ]
+  addPlatformGlow(group, 6, 0xf7b267, -1)
   const cubes: THREE.Mesh[] = []
   const wires: THREE.Mesh[] = []
   positions.forEach(({ x, y, z, s }) => {
-    const mat = new THREE.MeshStandardMaterial({ color: 0xf7b267, emissive: 0xf7b267, emissiveIntensity: 0.2, metalness: 0.4, roughness: 0.5, transparent: true, opacity: 0.75 })
+    const mat = new THREE.MeshStandardMaterial({ color: 0xf7b267, emissive: 0xf7b267, emissiveIntensity: 0.5, metalness: 0.4, roughness: 0.5, transparent: true, opacity: 0.8 })
     const cube = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), mat)
     cube.position.set(x, y, z)
     cube.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2)
     group.add(cube)
     cubes.push(cube)
-    const wireMat = new THREE.MeshBasicMaterial({ color: 0xf7b267, wireframe: true, transparent: true, opacity: 0.25 })
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0xf7b267, wireframe: true, transparent: true, opacity: 0.4 })
     const wire = new THREE.Mesh(new THREE.BoxGeometry(s * 1.2, s * 1.2, s * 1.2), wireMat)
     wire.position.copy(cube.position)
     wire.rotation.copy(cube.rotation)
@@ -155,27 +209,28 @@ function buildProjects(group: THREE.Group) {
     wires.push(wire)
   })
 
-  const label = createTextSprite('Projects')
+  const label = createTextSprite('Projects', 10, '#f7b267')
   label.position.y = 8
   group.add(label)
   return { cubes, wires }
 }
 
 function buildSkills(group: THREE.Group) {
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x39d2df, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x39d2df, emissiveIntensity: 0.1, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 0.3, 6), baseMat))
+  addPlatformGlow(group, 6, 0x39d2df)
 
   const nodes = [
     { x: 0, y: 2.5, z: 0, s: 1.2, c: 0x3ddbe8 },
     { x: 3.5, y: 2, z: 1, s: 0.85, c: 0x2bb8c6 },
-    { x: -2.5, y: 3.5, z: 1.5, s: 0.75, c: 0x00a0b0 },
+    { x: -2.5, y: 3.5, z: 1.5, s: 0.75, c: 0x35c9d6 },
     { x: 2.5, y: 4, z: -2.5, s: 0.65, c: 0xf7b267 },
-    { x: -3.5, y: 1.5, z: -1.5, s: 0.75, c: 0x00d0e0 },
-    { x: 1.5, y: 0.8, z: 3, s: 0.65, c: 0x00b0c0 },
+    { x: -3.5, y: 1.5, z: -1.5, s: 0.75, c: 0x39d2df },
+    { x: 1.5, y: 0.8, z: 3, s: 0.65, c: 0x2bb8c6 },
   ]
   const spheres: THREE.Mesh[] = []
   nodes.forEach(({ x, y, z, s, c }) => {
-    const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.25, metalness: 0.3, roughness: 0.5 })
+    const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.45, metalness: 0.3, roughness: 0.5 })
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(s, 16, 16), mat)
     sphere.position.set(x, y, z)
     sphere.userData.baseScale = s
@@ -186,7 +241,7 @@ function buildSkills(group: THREE.Group) {
   const conns = [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [3, 4]]
   conns.forEach(([a, b]) => {
     const pts = [new THREE.Vector3(nodes[a].x, nodes[a].y, nodes[a].z), new THREE.Vector3(nodes[b].x, nodes[b].y, nodes[b].z)]
-    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x3ddbe8, transparent: true, opacity: 0.2 })))
+    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x3ddbe8, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })))
   })
 
   const label = createTextSprite('Skills')
@@ -196,43 +251,52 @@ function buildSkills(group: THREE.Group) {
 }
 
 function buildCerts(group: THREE.Group) {
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0xf0a050, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0xf0a050, emissiveIntensity: 0.1, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 0.3, 6), baseMat))
+  addPlatformGlow(group, 8, 0xf0a050)
 
   const obelisks = [
-    { x: -5, h: 5.5, c: 0xf7b267 },
-    { x: -2.5, h: 3.8, c: 0xf0a050 },
-    { x: 0, h: 4.8, c: 0xe89040 },
-    { x: 2.5, h: 3.2, c: 0xf7b267 },
-    { x: 5, h: 4.2, c: 0xf0a050 },
-    { x: 7.5, h: 3.6, c: 0xe89040 },
+    { x: -5, h: 5.5, c: 0xf7b267, z: 0.8 },
+    { x: -2.5, h: 3.8, c: 0xf0a050, z: -1 },
+    { x: 0, h: 4.8, c: 0xf7b267, z: 0.4 },
+    { x: 2.5, h: 3.2, c: 0xf0a050, z: -0.8 },
+    { x: 5, h: 4.2, c: 0xf7b267, z: 0.6 },
+    { x: 7.5, h: 3.6, c: 0xf0a050, z: -0.4 },
   ]
-  obelisks.forEach(({ x, h, c }) => {
-    const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.2, metalness: 0.5, roughness: 0.3, transparent: true, opacity: 0.8 })
+  obelisks.forEach(({ x, h, c, z }) => {
+    const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.5, metalness: 0.5, roughness: 0.3, transparent: true, opacity: 0.85 })
     const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.85, 0), mat)
-    mesh.position.set(x, h / 2 + 0.5, 0)
+    mesh.position.set(x, h / 2 + 0.5, z)
     mesh.scale.set(1, h / 1.6, 1)
     group.add(mesh)
+    const wire = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.98, 0),
+      new THREE.MeshBasicMaterial({ color: c, wireframe: true, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }),
+    )
+    wire.position.copy(mesh.position)
+    wire.scale.copy(mesh.scale)
+    group.add(wire)
   })
 
-  const label = createTextSprite('Certifications', 12)
+  const label = createTextSprite('Certifications', 12, '#f0a050')
   label.position.y = 8
   group.add(label)
   return {}
 }
 
 function buildContact(group: THREE.Group) {
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x3ddbe8, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a1620, emissive: 0x3ddbe8, emissiveIntensity: 0.1, metalness: 0.8, roughness: 0.3 })
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 0.3, 8), baseMat))
+  addPlatformGlow(group, 5, 0x3ddbe8)
 
   // Tower
-  const towerMat = new THREE.MeshStandardMaterial({ color: 0x35c9d6, emissive: 0x3ddbe8, emissiveIntensity: 0.15, metalness: 0.6, roughness: 0.3 })
+  const towerMat = new THREE.MeshStandardMaterial({ color: 0x35c9d6, emissive: 0x3ddbe8, emissiveIntensity: 0.3, metalness: 0.6, roughness: 0.3 })
   const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.4, 7, 8), towerMat)
   tower.position.set(0, 3.7, 0)
   group.add(tower)
 
   // Cone top
-  const coneMat = new THREE.MeshStandardMaterial({ color: 0xf7b267, emissive: 0xf7b267, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.3 })
+  const coneMat = new THREE.MeshStandardMaterial({ color: 0xf7b267, emissive: 0xf7b267, emissiveIntensity: 0.6, metalness: 0.5, roughness: 0.3 })
   const cone = new THREE.Mesh(new THREE.ConeGeometry(1, 2.5, 8), coneMat)
   cone.position.set(0, 8.5, 0)
   group.add(cone)
@@ -449,14 +513,26 @@ export default function World3D() {
     if (!def) return
     const pos = new THREE.Vector3(...def.position)
     const offset = new THREE.Vector3(...def.camOffset)
-    cameraAnim.current = { active: true, position: pos.clone().add(offset), lookAt: pos.clone() }
+    const camPos = pos.clone().add(offset)
+    // Aim at the structure's mid-height, panned toward camera-right so the
+    // platform sits left of center, clear of the content panel
+    const dir = pos.clone().sub(camPos).normalize()
+    const right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize()
+    // Pan further right on narrow viewports, where the panel covers more
+    // of the canvas
+    const panelFraction = Math.min(430, window.innerWidth * 0.46) / window.innerWidth
+    const pan = 4 + panelFraction * 12
+    const lookAt = pos.clone().add(right.multiplyScalar(pan)).add(new THREE.Vector3(0, 3, 0))
+    cameraAnim.current = { active: true, position: camPos, lookAt }
     if (controlsRef.current) controlsRef.current.autoRotate = false
     setFocused(platformId)
   }, [])
 
   const flyToOverview = useCallback(() => {
     cameraAnim.current = { active: true, position: OVERVIEW.position.clone(), lookAt: OVERVIEW.lookAt.clone() }
-    if (controlsRef.current) controlsRef.current.autoRotate = true
+    if (controlsRef.current) {
+      controlsRef.current.autoRotate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    }
     setFocused(null)
   }, [])
 
@@ -484,6 +560,8 @@ export default function World3D() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setClearColor(0x050a0f)
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.15
     mount.appendChild(renderer.domElement)
 
     // Controls
@@ -493,11 +571,14 @@ export default function World3D() {
     controls.dampingFactor = 0.06
     controls.minDistance = 12
     controls.maxDistance = 120
-    controls.autoRotate = true
+    controls.autoRotate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     controls.autoRotateSpeed = 0.35
     controls.maxPolarAngle = Math.PI * 0.85
     controls.update()
     controlsRef.current = controls
+    if (import.meta.env.DEV) {
+      ;(window as unknown as Record<string, unknown>).__world3dDebug = { camera, controls, cameraAnim }
+    }
 
     // Lighting
     scene.add(new THREE.AmbientLight(0x80a0c0, 0.5))
@@ -526,9 +607,41 @@ export default function World3D() {
     const starGeo = new THREE.BufferGeometry()
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
     const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
-      color: 0xc8e0f0, size: 0.18, transparent: true, opacity: 0.4, sizeAttenuation: true, blending: THREE.AdditiveBlending, depthWrite: false,
+      color: 0xc8e0f0, size: 0.22, transparent: true, opacity: 0.5, sizeAttenuation: true, blending: THREE.AdditiveBlending, depthWrite: false,
     }))
     scene.add(stars)
+
+    // Nebula backdrops — huge soft glows that give the void some color depth
+    const nebulae: Array<{ pos: [number, number, number]; scale: number; color: string; opacity: number }> = [
+      { pos: [0, -25, -50], scale: 240, color: 'rgb(61, 219, 232)', opacity: 0.05 },
+      { pos: [-60, 15, -80], scale: 190, color: 'rgb(247, 178, 103)', opacity: 0.04 },
+      { pos: [70, -5, 30], scale: 170, color: 'rgb(43, 184, 198)', opacity: 0.045 },
+    ]
+    nebulae.forEach(({ pos, scale, color, opacity }) => {
+      const mat = new THREE.SpriteMaterial({
+        map: createGlowTexture(color), transparent: true, opacity,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      })
+      const sprite = new THREE.Sprite(mat)
+      sprite.position.set(...pos)
+      sprite.scale.setScalar(scale)
+      scene.add(sprite)
+    })
+
+    // Concentric ground rings centered on the hub — spatial grounding
+    for (let r = 20; r <= 100; r += 20) {
+      const pts = new THREE.EllipseCurve(0, 0, r, r, 0, Math.PI * 2).getPoints(128)
+      const ring = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({
+          color: 0x3ddbe8, transparent: true, opacity: 0.05 * (1 - r / 140),
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        }),
+      )
+      ring.rotation.x = -Math.PI / 2
+      ring.position.y = -8
+      scene.add(ring)
+    }
 
     // Build platforms
     const platformGroups: THREE.Group[] = []
@@ -574,6 +687,44 @@ export default function World3D() {
     const contactAnim = buildContact(contactGroup)
     scene.add(contactGroup)
     platformGroups.push(contactGroup)
+
+    // Light paths from the hub to each platform, echoing the 2D site's
+    // constellation lines, with a glowing pulse traveling each path
+    const pulsePaths: Array<{ curve: THREE.QuadraticBezierCurve3; pulse: THREE.Sprite }> = []
+    PLATFORMS.slice(1).forEach((def) => {
+      const start = new THREE.Vector3(0, 2, 0)
+      const end = new THREE.Vector3(def.position[0], def.position[1] + 1, def.position[2])
+      const mid = start.clone().add(end).multiplyScalar(0.5)
+      mid.y += 7
+      const curve = new THREE.QuadraticBezierCurve3(start, mid, end)
+
+      const line = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(curve.getPoints(64)),
+        new THREE.LineBasicMaterial({
+          color: def.color, transparent: true, opacity: 0.18,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        }),
+      )
+      scene.add(line)
+
+      const hex = `#${def.color.toString(16).padStart(6, '0')}`
+      const pulse = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: createGlowTexture(`rgb(${(def.color >> 16) & 255}, ${(def.color >> 8) & 255}, ${def.color & 255})`),
+        color: hex, transparent: true, opacity: 0.9,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }))
+      pulse.scale.setScalar(1.6)
+      scene.add(pulse)
+      pulsePaths.push({ curve, pulse })
+    })
+
+    // Labels fade out as the camera approaches, so they never sit on
+    // top of a focused platform
+    const labelSprites: THREE.Sprite[] = []
+    scene.traverse((obj) => {
+      if (obj instanceof THREE.Sprite && obj.userData.isLabel) labelSprites.push(obj)
+    })
+    const labelWorldPos = new THREE.Vector3()
 
     // Raycaster click detection
     const raycaster = new THREE.Raycaster()
@@ -650,6 +801,21 @@ export default function World3D() {
         const s = 1 + phase * 2.5
         ring.scale.setScalar(s)
         ;(ring.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.25 * (1 - phase))
+      })
+
+      // Pulses traveling the light paths
+      pulsePaths.forEach(({ curve, pulse }, i) => {
+        const phase = (t * 0.08 + i * 0.2) % 1
+        pulse.position.copy(curve.getPoint(phase))
+        ;(pulse.material as THREE.SpriteMaterial).opacity = 0.9 * Math.sin(phase * Math.PI)
+      })
+
+      // Distance-based label fade
+      labelSprites.forEach((sprite) => {
+        sprite.getWorldPosition(labelWorldPos)
+        const d = camera.position.distanceTo(labelWorldPos)
+        ;(sprite.material as THREE.SpriteMaterial).opacity =
+          THREE.MathUtils.clamp((d - 30) / 22, 0, 1) * 0.9
       })
 
       // Camera fly-to lerp
