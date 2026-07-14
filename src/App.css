@@ -139,6 +139,24 @@
   will-change: transform;
 }
 
+/* Equal card heights inside grids: the grid stretches only its direct
+   child (the reveal wrapper), so the tilt wrapper and the card itself
+   must inherit the full cell height or same-row cards end up ragged */
+.cert-grid .scroll-reveal,
+.cert-grid .tilt-card,
+.edge-grid .scroll-reveal,
+.edge-grid .tilt-card,
+.capability-grid .scroll-reveal,
+.capability-grid .tilt-card,
+.reflection-grid .scroll-reveal,
+.reflection-grid .tilt-card,
+.cert-card,
+.edge-card,
+.capability-card,
+.reflection-card {
+  height: 100%;
+}
+
 /* ================================================================
    MAIN LAYOUT
    ================================================================ */
